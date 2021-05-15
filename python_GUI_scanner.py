@@ -1,5 +1,5 @@
 # sample gui for project
-
+# the gui is fully working now
 import PySimpleGUI as gui
 import pythonScannerCMD
 
