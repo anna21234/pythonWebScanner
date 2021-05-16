@@ -1,3 +1,4 @@
+import sys
 from urllib.parse import urljoin, urlparse
 
 import requests
@@ -33,8 +34,8 @@ sPy.headers[
 # print(r.text)
 
 # collecting any available forms here with the Beautiful soup library
-def collect_the_forms(url):
-    soup = bSoup(sPy.get(url).content, "html.parser")
+def collect_the_forms(t_address):
+    soup = bSoup(sPy.get(t_address).content, "html.parser")
     return soup.find_all("form")
 
 
@@ -64,8 +65,8 @@ def details_of_the_form(form):
 
 # filling out and sending the forms, if any are gathered
 
-def post_the_form(form_details, url, value):
-    target_url = urljoin(url, form_details["action"])
+def post_the_form(form_details, t_address, value):
+    target_url = urljoin(t_address, form_details["action"])
 
     theInputs = form_details["inputs"]
     data = {}
@@ -92,9 +93,9 @@ def post_the_form(form_details, url, value):
 # the function will analyse the page to see if the script string has been inserted into the form successfully
 # The returned form msg variable stores the result of the function because that will be used in the GUI.
 # Print has no return value therefore it will break the GUI without this variable
-def scan_for_xss(url):
+def scan_for_xss(t_address):
     greeting = "-------------------Scanning for XSS---------------------"
-    forms = collect_the_forms(url)
+    forms = collect_the_forms(t_address)
     returned_form_msg = ""
 
     testing_script = "<sCriPt>alert('Testing for XSS')</ScriPt>"
@@ -109,7 +110,7 @@ def scan_for_xss(url):
         print("Scanning form(s)...")
         for form in forms:
             form_details = details_of_the_form(form)
-            page_content = post_the_form(form_details, url, testing_script).content.decode()
+            page_content = post_the_form(form_details, t_address, testing_script).content.decode()
 
             if testing_script in page_content:
                 vulnerable_page = True
@@ -118,7 +119,8 @@ def scan_for_xss(url):
                 vulnerable_page = False
 
             if vulnerable_page:
-                returned_form_msg = f"Found XSS at this address: {url}\n\nHere is the vulnerable form\n {form_details}"
+                returned_form_msg = f"Found XSS at this address: {t_address}\n\n" \
+                                    f"Here is the vulnerable form\n {form_details} "
 
             if not vulnerable_page:
                 returned_form_msg = "Sorry, no XSS was found"
@@ -153,27 +155,27 @@ def vulnerable_errors(response):
 # thepythoncode SQL scanner but added to it so that the function now performs multiple ways to scan for SQLi instead
 # of just filling out apostrophes
 
-def scan_for_sqli(url):
+def scan_for_sqli(t_address):
     greeting = "-------------------Scanning for SQLi ------------------ "
     returned_msg = ""
     returned_form_msg = ""
     sqli_string = "' or 1=1;--"
 
     for a in '"':
-        new_url = f"{url}{a}"
+        new_url = f"{t_address}{a}"
         serverResponse = sPy.get(new_url)
         if vulnerable_errors(serverResponse):
             returned_msg = f"A possible SQLi has been found at this address: {new_url} "
             print(returned_msg)
         if not vulnerable_errors(serverResponse):
             for b in "'":
-                new_url = f"{url}{b}"
+                new_url = f"{t_address}{b}"
                 serverResponse = sPy.get(new_url)
                 if vulnerable_errors(serverResponse):
                     returned_msg = f"A possible SQLi has been found at this address: {new_url} "
                     print(returned_msg)
                 if not vulnerable_errors(serverResponse):
-                    sqli_url = f"{url}{sqli_string}"
+                    sqli_url = f"{t_address}{sqli_string}"
                     print("Trying again with OR attacks ")
                     secondResponse = sPy.get(sqli_url)
                     if vulnerable_errors(secondResponse):
@@ -183,7 +185,7 @@ def scan_for_sqli(url):
                         returned_msg = "Sorry, there are no SQLis at this url address. "
                         print(returned_msg)
 
-    forms = collect_the_forms(url)
+    forms = collect_the_forms(t_address)
     if len(forms) == 0:
         returned_form_msg = "There are no forms in this address"
         print(returned_form_msg)
@@ -202,13 +204,13 @@ def scan_for_sqli(url):
                             pass
                     elif form_tag["type"] != "submit":
                         data[form_tag["name"]] = f"test{x}"
-                url = urljoin(url, form_details["action"])
+                t_address = urljoin(t_address, form_details["action"])
                 if form_details["method"] == "post":
-                    serverResponse = sPy.post(url, data=data)
+                    serverResponse = sPy.post(t_address, data=data)
                 elif form_details["method"] == "get":
-                    serverResponse = sPy.get(url, params=data)
+                    serverResponse = sPy.get(t_address, params=data)
                 if vulnerable_errors(serverResponse):
-                    returned_form_msg = f"A possible SQLi has been found in this form: {url} \n Here is the " \
+                    returned_form_msg = f"A possible SQLi has been found in this form: {t_address} \n Here is the " \
                                         f"vulnerable form: {form_details} "
                     print(returned_form_msg)
 
@@ -224,13 +226,14 @@ def scan_for_sqli(url):
                                     pass
                             elif form_tag["type"] != "submit":
                                 data[form_tag["name"]] = f"test{y}"
-                        url = urljoin(url, form_details["action"])
+                        t_address = urljoin(t_address, form_details["action"])
                         if form_details["method"] == "post":
-                            serverResponse = sPy.post(url, data=data)
+                            serverResponse = sPy.post(t_address, data=data)
                         elif form_details["method"] == "get":
-                            serverResponse = sPy.get(url, params=data)
+                            serverResponse = sPy.get(t_address, params=data)
                         if vulnerable_errors(serverResponse):
-                            returned_form_msg = f"A possible SQLi has been found in this form: {url} \n Here is the " \
+                            returned_form_msg = f"A possible SQLi has been found in this form: {t_address} " \
+                                                f"\n Here is the " \
                                                 f"vulnerable form: {form_details} "
                             print(returned_form_msg)
                         if not vulnerable_errors(serverResponse):
@@ -244,14 +247,15 @@ def scan_for_sqli(url):
                                         pass
                                 elif form_tag["type"] != "submit":
                                     data[form_tag["name"]] = f"test{x}"
-                            url = urljoin(url, form_details["action"])
+                            t_address = urljoin(t_address, form_details["action"])
                             if form_details["method"] == "post":
-                                serverResponse = sPy.post(url, data=data)
+                                serverResponse = sPy.post(t_address, data=data)
                             elif form_details["method"] == "get":
-                                serverResponse = sPy.get(url, params=data)
+                                serverResponse = sPy.get(t_address, params=data)
                             if vulnerable_errors(serverResponse):
-                                returned_form_msg = f"A possible SQLi has been found in this form: {url} \n Here is the " \
-                                                    f"vulnerable form: {form_details} "
+                                returned_form_msg = f"A possible SQLi has been found in this form: {t_address} \n " \
+                                                    f"Here is the vulnerable form: {form_details} "
+
                                 print(returned_form_msg)
                             # something else here
                             if not vulnerable_errors(serverResponse):
@@ -272,9 +276,9 @@ def scan_for_sqli(url):
 # When successful the contents of the file will be displayed on the page
 # Very loosely based on the LFI function but added the php server and testing script
 
-def scan_for_rfi(url):
+def scan_for_rfi(t_address):
     greeting = "-------------------Scanning for RFI---------------------"
-    grab_address = sPy.get(url)
+    grab_address = sPy.get(t_address)
     print("Target address: " + grab_address.url)
     parsed_address = urlparse(grab_address.url)
     # returned_msg = " "
@@ -325,13 +329,13 @@ def scan_for_rfi(url):
 # but I have rewritten it to be for Python 3 because the Python 2 script failed to run
 # and also improved on the loop to check for multiple depths until the file is found
 
-def scan_for_lfi(url):
+def scan_for_lfi(t_address):
     greeting = "-------------------Scanning for LFI---------------------"
-    get_url = sPy.get(url)
+    get_url = sPy.get(t_address)
     parsed_url = urlparse(get_url.url)
     scriptPath = parsed_url.path
-    returned_msg = ""
-    returned_msg_key = ""
+    # returned_msg = ""
+    # returned_msg_key = ""
     theKeyword = parsed_url.query
     param_equals = "="
     param_query = "?"
@@ -355,7 +359,7 @@ def scan_for_lfi(url):
     else:
         returned_msg_key = F"The query is: {theKeyword}"
         print(returned_msg_key)
-    if param_query and param_equals in url:
+    if param_query and param_equals in t_address:
         print("1 parameter is present. Searching for extra parameters...")
         if param_and in parsed_url.query and param_equals in parsed_url.query:
             print("More parameters have been found")
@@ -399,26 +403,13 @@ def scan_for_lfi(url):
 
 
 if __name__ == "__main__":
-    # url = sys.argv[1]
-    # testing sites and servers above you can supplement your own
-    #
-    # testing for sqli and xss
-    url = "http://testphp.vulnweb.com/artists.php?artist=1"
-    # url2 = "http://testphp.vulnweb.com/search.php?test=query"
-    # url3 = "https://xss-game.appspot.com/level1/frame"
-    # url = "http://172.16.218.131/dvwa/vulnerabilities/xss_r/"
-    # url = "http://172.16.218.131/dvwa/vulnerabilities/sqli/"
-    #
-    # scanning for file inclusions
-    # url = "http://172.16.218.131/dvwa/vulnerabilities/fi/?page=include.php"
+    url = sys.argv[1]
+
     print("-------------------Scanning for SQLi ------------------ ")
     scan_for_sqli(url)
-    # scan_for_sqli(url2)
-    # scan_for_sqli(url3)
+
     # print("-------------------Scanning for XSS---------------------")
     # scan_for_xss(url)
-    # scan_for_xss(url2)
-    # scan_for_xss(url3)
     # print("-------------------Scanning for RFI---------------------")
     # scan_for_rfi(url)
     # print("-------------------Scanning for LFI---------------------")
