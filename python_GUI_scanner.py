@@ -34,7 +34,7 @@ scan_window, report_window = main_window_layout(), None
 # This is the main loop where the windows are read, modified and so on
 while True:
     window, event, values = Gui.read_all_windows()
-    
+
     # If the user clicks the Exit button or closes the window via the X button, close the window
     if event == Gui.WINDOW_CLOSED or event == 'Exit':
         window.close()
