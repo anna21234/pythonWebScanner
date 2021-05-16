@@ -1,4 +1,3 @@
-
 import PySimpleGUI as Gui
 import pythonScannerCMD
 
@@ -35,7 +34,7 @@ scan_window, report_window = main_window_layout(), None
 # This is the main loop where the windows are read, modified and so on
 while True:
     window, event, values = Gui.read_all_windows()
-
+    
     # If the user clicks the Exit button or closes the window via the X button, close the window
     if event == Gui.WINDOW_CLOSED or event == 'Exit':
         window.close()
@@ -45,20 +44,37 @@ while True:
         elif window == scan_window:  # If the window being closed is the main window (the scan window)
             # close the app itself
             break
-    elif event == 'Report' and not report_window:
+    if event == 'Report' and not report_window:
         report_window = report_window_layout()
+        print(scan_window)
         # Here the output from the main scanner functions is displayed in the report window
-        report_window['-REPORT-'].update(scan_result_sql + "\n " + "\n " + scan_result_xss + "\n " + "\n " + scan_result_lfi + "\n " + "\n " + scan_result_rfi)
+        if (values['-TARGET-']) is "":
+            report_window['-REPORT-'].update("You haven't scanned a target yet. Enter an address and click Ok")
+        elif (values['-TARGET-']) is not "":
+
+            report_window['-REPORT-'].update(
+                    scan_result_sql + "\n " + "\n " + scan_result_xss + "\n " + "\n " + scan_result_lfi + "\n " + "\n " + scan_result_rfi)
 
     if event == 'Ok':
+        scan_result_sql = ""
+        scan_result_xss = ""
+        scan_result_lfi = ""
+        scan_result_rfi = ""
         # This event grab the URL input from the main window (window 1) and sends it to the scanner modules
         # The results of each scanner function is stored in a variable
         # which is used above to be able to display the contents
-        address_to_scan = (values['-TARGET-'])
-        scan_result_sql = pythonScannerCMD.scan_for_sqli(address_to_scan)
-        scan_result_xss = pythonScannerCMD.scan_for_xss(address_to_scan)
-        scan_result_lfi = pythonScannerCMD.scan_for_lfi(address_to_scan)
-        scan_result_rfi = pythonScannerCMD.scan_for_rfi(address_to_scan)
+        if (values['-TARGET-']) is "":
+            scan_window['-SCAN-'].update("You haven't scanned a target yet. Enter an address and click Ok")
+        elif (values['-TARGET-']) is not "":
+            address_to_scan = (values['-TARGET-'])
+            scan_result_sql = pythonScannerCMD.scan_for_sqli(address_to_scan)
+            scan_result_xss = pythonScannerCMD.scan_for_xss(address_to_scan)
+            scan_result_lfi = pythonScannerCMD.scan_for_lfi(address_to_scan)
+            scan_result_rfi = pythonScannerCMD.scan_for_rfi(address_to_scan)
+
+
+
+
 
 
 window.close()
