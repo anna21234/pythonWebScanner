@@ -144,16 +144,14 @@ def vulnerable_errors(response):
     return False
 
 
-# The SQLi function
-# SQLi is short for SQL injection
-# This tests both any available forms and the URL address itself
+# The SQLi function SQLi is short for SQL injection This tests both any available forms and the URL address itself
 # It first grabs the url and then applies a few ways to check for SQLi such as adding apostrophes
 # and the "or 1=1;--" attack which makes the query always true
-# Upon server response the function analyses the page for any errors
-# that arose from searching this query and saves the result
-# It repeats the same thing for the forms
-# Used the code from thepythoncode SQL scanner
-# but added to it so that the function now scans for all 3 ways to scan for SQLi instead of just filling out apostrophes
+# Upon server response the function analyses the page for any errors that arose from searching this query
+# and saves the result
+# It repeats the same thing for the forms Used the code from
+# thepythoncode SQL scanner but added to it so that the function now performs multiple ways to scan for SQLi instead
+# of just filling out apostrophes
 
 def scan_for_sqli(url):
     greeting = "-------------------Scanning for SQLi ------------------ "
@@ -272,6 +270,7 @@ def scan_for_sqli(url):
 # and append the server address to the end of the target address where the parameter and equals sign is
 # This is so the target can access and open the testing file and display the contents
 # When successful the contents of the file will be displayed on the page
+# Very loosely based on the LFI function but added the php server and testing script
 
 def scan_for_rfi(url):
     greeting = "-------------------Scanning for RFI---------------------"
@@ -313,6 +312,18 @@ def scan_for_rfi(url):
         print(returned_msg)
     return greeting + "\n" + returned_msg
 
+# The LFI (Local file inclusion) function
+# This is similar to the RFI function, except for this function, no external servers are needed
+# LFI works in the way of URL modification to access internal files
+# It grabs the url and looks for a parameter and value
+# It then constructs the directory traversal attack
+# by grabbing the target url
+# and continuosly adding ../ to each depth while looking for a specified file
+# If decided whether it has found the file or not
+# by looking into the server response content for a certain specfied string
+# Partly used the script by sUbc0ol /LFI-scanner on github originally made for Python 2
+# but I have rewritten it to be for Python 3 because the Python 2 script failed to run
+# and also improved on the loop to check for multiple depths until the file is found
 
 def scan_for_lfi(url):
     greeting = "-------------------Scanning for LFI---------------------"
