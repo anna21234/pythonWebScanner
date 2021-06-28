@@ -21,15 +21,15 @@ sPy.headers[
 #     'password': 'password',
 #     'Login': 'Login',
 # }
-# cookies = dict(security='low', PHPSESSID='2c0f6b8668e019d591bc333256204eb4')
+# cookies = dict(security='low', PHPSESSID='')
 #
 # sPy.cookies.update(cookies)
 #
-# sPy.post('http://172.16.218.131/dvwa/login.php', data=login_payload)
+# sPy.post('http://dvwa-ip-here/dvwa/login.php', data=login_payload)
 
 # this is to test that we have logged in successfully and can access a page, it will get the page and print it
 
-# r = sPy.get('http://172.16.218.131/dvwa/vulnerabilities/fi/?page=include.php')
+# r = sPy.get('http://dvwa-ip-here/dvwa/vulnerabilities/fi/?page=include.php')
 # print(r.text)
 
 # collecting any available forms here with the Beautiful soup library
