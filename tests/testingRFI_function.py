@@ -9,7 +9,7 @@ returned_msg_fail = "Sorry, no remote files found"
 class RFITestCase(unittest.TestCase):
     def test_remote_file_inclusion(self):
         actual = pythonScannerCMD.scan_for_rfi(testing_url)
-        expected = returned_msg_success
+        expected = returned_msg_fail
         self.assertEqual(expected, actual)
 
 

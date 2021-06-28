@@ -1,4 +1,3 @@
-import sys
 from urllib.parse import urljoin, urlparse
 
 import requests
@@ -22,7 +21,7 @@ sPy.headers[
 #     'password': 'password',
 #     'Login': 'Login',
 # }
-# cookies = dict(security='low', PHPSESSID='')
+# cookies = dict(security='low', PHPSESSID='2c0f6b8668e019d591bc333256204eb4')
 #
 # sPy.cookies.update(cookies)
 #
@@ -30,7 +29,7 @@ sPy.headers[
 
 # this is to test that we have logged in successfully and can access a page, it will get the page and print it
 
-# r = sPy.get('http://192.168.59.128/dvwa/vulnerabilities/fi/?page=include.php')
+# r = sPy.get('http://172.16.218.131/dvwa/vulnerabilities/fi/?page=include.php')
 # print(r.text)
 
 # collecting any available forms here with the Beautiful soup library
@@ -95,6 +94,7 @@ def post_the_form(form_details, t_address, value):
 # Print has no return value therefore it will break the GUI without this variable
 def scan_for_xss(t_address):
     greeting = "-------------------Scanning for XSS---------------------"
+    print(greeting)
     forms = collect_the_forms(t_address)
     returned_form_msg = ""
 
@@ -121,11 +121,16 @@ def scan_for_xss(t_address):
             if vulnerable_page:
                 returned_form_msg = f"Found XSS at this address: {t_address}\n\n" \
                                     f"Here is the vulnerable form\n {form_details} "
+                print(returned_form_msg)
 
             if not vulnerable_page:
                 returned_form_msg = "Sorry, no XSS was found"
-
+                print(returned_form_msg)
+        # --this line below is for the GUI to look pretty
         return greeting + "\n" + returned_form_msg
+
+        # --this line below is for the pytests so they wont complain
+        # return returned_form_msg
 
 
 # This holds Database/Server error messages that arise when testing for SQLi.
@@ -157,6 +162,7 @@ def vulnerable_errors(response):
 
 def scan_for_sqli(t_address):
     greeting = "-------------------Scanning for SQLi ------------------ "
+    print(greeting)
     returned_msg = ""
     returned_form_msg = ""
     sqli_string = "' or 1=1;--"
@@ -253,7 +259,7 @@ def scan_for_sqli(t_address):
                             elif form_details["method"] == "get":
                                 serverResponse = sPy.get(t_address, params=data)
                             if vulnerable_errors(serverResponse):
-                                returned_form_msg = f"A possible SQLi has been found in this form: {t_address} \n " \
+                                returned_form_msg = f"A possible SQLi has been found in this form: {t_address}\n " \
                                                     f"Here is the vulnerable form: {form_details} "
 
                                 print(returned_form_msg)
@@ -263,6 +269,7 @@ def scan_for_sqli(t_address):
                                 print(returned_form_msg)
 
     return greeting + "\n" + returned_msg + "\n" + "\n" + returned_form_msg
+    # return returned_msg + returned_form_msg
 
 
 # The RFI (Remote File Inclusion) function
@@ -278,6 +285,7 @@ def scan_for_sqli(t_address):
 
 def scan_for_rfi(t_address):
     greeting = "-------------------Scanning for RFI---------------------"
+    print(greeting)
     grab_address = sPy.get(t_address)
     print("Target address: " + grab_address.url)
     parsed_address = urlparse(grab_address.url)
@@ -315,6 +323,8 @@ def scan_for_rfi(t_address):
         returned_msg = "No parameters, therefore can't proceed"
         print(returned_msg)
     return greeting + "\n" + returned_msg
+    # return returned_msg
+
 
 # The LFI (Local file inclusion) function
 # This is similar to the RFI function, except for this function, no external servers are needed
@@ -331,6 +341,7 @@ def scan_for_rfi(t_address):
 
 def scan_for_lfi(t_address):
     greeting = "-------------------Scanning for LFI---------------------"
+    print(greeting)
     get_url = sPy.get(t_address)
     parsed_url = urlparse(get_url.url)
     scriptPath = parsed_url.path
@@ -383,9 +394,8 @@ def scan_for_lfi(t_address):
             scan_res = sPy.get(finalString)
             res_source = scan_res.content.decode()
             if findRoot in res_source:
-
-                returned_msg = f"It worked! The file was found! \n Address: {scan_res.url}"
-                print(returned_msg)
+                found_address = scan_res.url
+                returned_msg = f"It worked! The file was found! \n Address: {found_address}"
 
                 break
             elif findRoot not in res_source:
@@ -400,17 +410,19 @@ def scan_for_lfi(t_address):
         print(returned_msg)
 
     return greeting + "\n" + returned_msg
+    # return returned_msg
 
 
 if __name__ == "__main__":
-    url = sys.argv[1]
+    # url = sys.argv[1]
+    url = "http://testphp.vulnweb.com/artists.php?artist=1"
 
-    print("-------------------Scanning for SQLi ------------------ ")
+    # print("-------------------Scanning for SQLi ------------------ ")
     scan_for_sqli(url)
 
     # print("-------------------Scanning for XSS---------------------")
-    # scan_for_xss(url)
+    scan_for_xss(url)
     # print("-------------------Scanning for RFI---------------------")
-    # scan_for_rfi(url)
+    scan_for_rfi(url)
     # print("-------------------Scanning for LFI---------------------")
-    # scan_for_lfi(url)
+    scan_for_lfi(url)
